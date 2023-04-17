@@ -7,6 +7,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <include
+        android:id="@+id/cardTop"
+        layout="@layout/card_top_layout" />
+
     <EditText
         android:id="@+id/txtLong"
         android:layout_width="0dp"
@@ -16,6 +20,7 @@
         android:layout_marginEnd="30dp"
         android:focusableInTouchMode="false"
         android:onClick="startAutocomplete"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -29,6 +34,7 @@
         android:layout_marginEnd="30dp"
         android:focusableInTouchMode="false"
         android:onClick="startAutocomplete"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,22 +43,29 @@
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginEnd="30dp"
-        android:layout_marginBottom="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtLat">
+        app:layout_constraintTop_toBottomOf="@+id/cardTop">
 
-        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
+        <!--<fragment
+            android:id="@+id/map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/map"
             tools:context=".MapsActivity"
-            android:name="com.google.android.gms.maps.SupportMapFragment" />
+            android:name="com.google.android.gms.maps.SupportMapFragment"/>-->
+
     </FrameLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="25dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        map:srcCompat="@android:drawable/ic_input_add" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
