@@ -6,14 +6,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -48,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
     private static final String TAG = "MainActivity";
+    private Button btnMostrarLugares;
     EditText txtLat, txtLong;
     GoogleMap mMap;
 
@@ -60,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         txtLong = findViewById(R.id.txtLong);
         txtLat = findViewById(R.id.txtLat);
+        btnMostrarLugares =  findViewById(R.id.btnMostrarLugares);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -71,6 +83,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
+        btnMostrarLugares.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showBottomDialog();
+            }
+        });
+    }
+
+    private void showBottomDialog() {
+
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.bottom_sheet_layout);
+
+        dialog.show();
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        dialog.getWindow().setGravity(Gravity.BOTTOM);
     }
 
     public void startAutocomplete(View view){
@@ -213,6 +244,8 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
                 }
             }
             mMap.addPolyline(polylineOptions);
+            System.out.println("///////////////////////////");
+            System.out.println(result.routes[0].legs[0].distance.inMeters);
         }
     }
 
