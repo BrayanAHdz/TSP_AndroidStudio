@@ -37,6 +37,8 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.errors.ApiException;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsStep;
+import com.google.maps.model.Distance;
+import com.google.maps.model.TravelMode;
 
 import java.io.Console;
 import java.io.IOException;
@@ -155,11 +157,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 GetDirectionsTask getDirectionsTask = new GetDirectionsTask(mexico, place.getLatLng(), mMap);
                 getDirectionsTask.execute();
 
-
-                float distance = locationA.distanceTo(locationB);
-
                 txtLong.setText(""+place.getName());
-                txtLat.setText(""+distance);
+                txtLat.setText("");
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 // TODO: Handle the error.
@@ -213,6 +212,8 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
                 }
             }
             mMap.addPolyline(polylineOptions);
+            System.out.println("//////////////////////////");
+            System.out.println(result.routes[0].legs[0].distance.inMeters);
         }
     }
 
