@@ -171,16 +171,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    public void startAutocompleteOrigin(View view){
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
+
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                .build(this);
+
+        startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE_ORIGIN);
+    }
     public void startAutocomplete(View view){
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
 
         Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
                 .build(this);
 
-        if(String.valueOf(view.getId()).equals("2131230906"))
-            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE_ORIGIN);
-        else
-            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
+        startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
     }
 
     @Override
@@ -230,9 +235,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         BitmapDescriptor bitmapDescriptor;
 
         if(tipo == 1)
-            bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
-        else
             bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+        else
+            bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
 
         Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(place)
@@ -279,13 +284,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.clear();
 
 
-        BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+        BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
         mMap.addMarker(new MarkerOptions()
                 .position(origen.getLatLng())
                 .title(origen.getName())
                 .icon(bitmapDescriptor));
 
-        bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+        bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
 
         for (int i = 0; i < lstLugares.size(); i++){
             mMap.addMarker(new MarkerOptions()
@@ -310,6 +315,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             getDirectionsTask.execute();
 
             getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), origen.getLatLng(), mMap);
+            getDirectionsTask.execute();
+        }
+        else{
+
+            TSP tsp = new TSP();
+            LatLng ruta[] = tsp.getTSP(origen, lstLugares);
+
+            GetDirectionsTask getDirectionsTask;
+            for (int i = 0; i < ruta.length - 1; i++){
+                getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap);
+                getDirectionsTask.execute();
+            }
+            getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap);
             getDirectionsTask.execute();
         }
     }

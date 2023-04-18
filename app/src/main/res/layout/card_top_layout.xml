@@ -54,7 +54,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Buscar lugar"
                     android:inputType="text"
-                    android:onClick="startAutocomplete"
+                    android:onClick="startAutocompleteOrigin"
                     android:paddingHorizontal="10dp"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small" />
             </LinearLayout>
