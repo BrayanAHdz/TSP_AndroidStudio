@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/center_dialog_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/createText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="5dp"
+            android:padding="8dp"
+            android:text="Agregar nuevo lugar"
+            android:textAlignment="viewStart"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textStyle="bold" />
+
+
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardView"
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="7dp"
+            app:cardElevation="1dp"
+            android:layout_marginVertical="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etLugar"
+                    style="@style/Widget.AppCompat.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:ems="10"
+                    android:focusableInTouchMode="false"
+                    android:hint="Buscar lugar"
+                    android:inputType="text"
+                    android:onClick="startAutocomplete"
+                    android:paddingHorizontal="10dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"></Button>
+            <Button
+                android:id="@+id/btnAddLugar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"></Button>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- AQUI VA EL LAYOUT -->
+
+</LinearLayout>
