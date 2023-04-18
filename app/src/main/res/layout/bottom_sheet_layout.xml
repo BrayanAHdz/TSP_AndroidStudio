@@ -24,6 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="5dp"
+            android:fontFamily="@font/poppins"
             android:padding="8dp"
             android:text="Mi lista de lugares"
             android:textAlignment="viewStart"

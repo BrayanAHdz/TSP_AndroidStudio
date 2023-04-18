@@ -19,6 +19,6 @@
         style="?attr/materialIconButtonStyle"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:icon="@android:drawable/ic_menu_delete" />
+        app:icon="@drawable/outline_delete_24" />
 
 </LinearLayout>
