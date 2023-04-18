@@ -10,21 +10,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="30dp">
 
         <TextView
             android:id="@+id/createText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"
+            android:fontFamily="@font/poppins"
             android:text="Agregar nuevo lugar"
             android:textAlignment="viewStart"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textStyle="bold" />
-
-
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
@@ -64,14 +60,21 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="end">
+
             <Button
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"></Button>
+                android:onClick="showBottomDialog"
+                android:text="Cancelar"
+                android:layout_marginEnd="10dp" />
+
             <Button
                 android:id="@+id/btnAddLugar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"></Button>
+                android:layout_height="wrap_content"
+                android:onClick="showBottomDialog"
+                android:text="Aceptar" />
         </LinearLayout>
 
     </LinearLayout>
