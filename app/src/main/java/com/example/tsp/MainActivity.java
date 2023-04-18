@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -21,7 +22,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -33,11 +33,17 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
+import com.google.maps.DirectionsApi;
+import com.google.maps.DirectionsApiRequest;
+import com.google.maps.GeoApiContext;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsStep;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
-        Lugar origin = new Lugar("Lugar1",2d,2d);
+        /*Lugar origin = new Lugar("Lugar1",2d,2d);
         lstLugares.add(new Lugar("Lugar2",2d,5d));
         lstLugares.add(new Lugar("Lugar3",2d,8d));
         lstLugares.add(new Lugar("Lugar4",5d,8d));
@@ -89,12 +95,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         lstLugares.add(new Lugar("Lugar10",2d,4d));
 
         TSP tsp = new TSP();
-        String ruta[] = tsp.getTSP(origin, lstLugares);
+        LatLng ruta[] = tsp.getTSP(origin, lstLugares);
 
         System.out.println("////////////////////////////");
         for (int i = 0; i < ruta.length; i++){
             System.out.println(ruta[i]);
-        }
+        }*/
     }
 
     public void showBottomDialog(View view) {
@@ -137,18 +143,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    public void startAutocomplete(View view){
-        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
-
-        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                .build(this);
-
-        if(String.valueOf(view.getId()).equals("2131230906"))
-            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE_ORIGIN);
-        else
-            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
-    }
-
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
@@ -177,18 +171,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void removeMarker(String markerId){
-        Marker marker = mMarkerMap.get(markerId);
-        if (marker != null) {
-            marker.remove();
-            mMarkerMap.remove(markerId);
-        }
-    }
+    public void startAutocomplete(View view){
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
 
-    private void replaceMarker(String markerId){
-        Marker marker = mMarkerMap.get(markerId);
-        if (marker != null)
-            marker.remove();
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                .build(this);
+
+        if(String.valueOf(view.getId()).equals("2131230906"))
+            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE_ORIGIN);
+        else
+            startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
     }
 
     @Override
@@ -213,12 +205,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 origen.setName(place.getName());
                 origen.setLatitude(place.getLatLng().latitude);
                 origen.setLongitude(place.getLatLng().longitude);
+                origen.setLatLng(place.getLatLng());
                 addMarker(origen, 1);
             }
             else{
+                lugar = new Lugar();
                 lugar.setName(place.getName());
                 lugar.setLatitude(place.getLatLng().latitude);
                 lugar.setLongitude(place.getLatLng().longitude);
+                lugar.setLatLng(place.getLatLng());
             }
             /*GetDirectionsTask getDirectionsTask = new GetDirectionsTask(mexico, place.getLatLng(), mMap);
             getDirectionsTask.execute();*/
@@ -258,7 +253,115 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         else{
             mMarkerMap.put(name, marker);
+            lstLugares.add(ubicacion);
         }
+
+        generateRute();
+    }
+
+    private void removeMarker(String markerId){
+        Marker marker = mMarkerMap.get(markerId);
+        if (marker != null) {
+            marker.remove();
+            mMarkerMap.remove(markerId);
+        }
+    }
+
+    private void replaceMarker(String markerId){
+        Marker marker = mMarkerMap.get(markerId);
+        if (marker != null)
+            marker.remove();
+    }
+
+    private void generateRute(){
+        if(origen.getName() == null || lstLugares.size() == 0) return;
+
+        mMap.clear();
+
+
+        BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+        mMap.addMarker(new MarkerOptions()
+                .position(origen.getLatLng())
+                .title(origen.getName())
+                .icon(bitmapDescriptor));
+
+        bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+
+        for (int i = 0; i < lstLugares.size(); i++){
+            mMap.addMarker(new MarkerOptions()
+                    .position(lstLugares.get(i).getLatLng())
+                    .title(lstLugares.get(i).getName())
+                    .icon(bitmapDescriptor));
+        }
+
+        if(lstLugares.size() == 1){
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask( origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap);
+            getDirectionsTask.execute();
+
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), origen.getLatLng(), mMap);
+            getDirectionsTask.execute();
+
+        }
+        else if(lstLugares.size() == 2){
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask(origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap);
+            getDirectionsTask.execute();
+
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap);
+            getDirectionsTask.execute();
+
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), origen.getLatLng(), mMap);
+            getDirectionsTask.execute();
+        }
+    }
+}
+
+class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
+
+    private LatLng origin;
+    private LatLng destination;
+    GoogleMap mMap;
+
+    public GetDirectionsTask(LatLng origin, LatLng destination, GoogleMap mMap) {
+        this.origin = origin;
+        this.destination = destination;
+        this.mMap = mMap;
+    }
+
+    @Override
+    protected DirectionsResult doInBackground(Void... params) {
+        try {
+            GeoApiContext context = new GeoApiContext.Builder()
+                    .apiKey("AIzaSyBDyw4G9UJTW_BYGFi8VtlQQGXq1rmglqQ")
+                    .build();
+
+            DirectionsApiRequest request = DirectionsApi.newRequest(context)
+                    .origin(cLatLong(origin))
+                    .destination(cLatLong(destination));
+            return request.await();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    protected void onPostExecute(DirectionsResult result) {
+        if (result != null) {
+            PolylineOptions polylineOptions = new PolylineOptions();
+            for (DirectionsStep step : result.routes[0].legs[0].steps) {
+                for (com.google.maps.model.LatLng latLng : step.polyline.decodePath()) {
+                    polylineOptions.add(new LatLng(latLng.lat,latLng.lng));
+                }
+            }
+            mMap.addPolyline(polylineOptions);
+            System.out.println("///////////////////////////");
+            System.out.println(result.routes[0].legs[0].distance.inMeters);
+            System.out.println(result.routes[0].legs[0].duration.inSeconds);
+        }
+    }
+
+    private com.google.maps.model.LatLng cLatLong(LatLng latLng){
+        return new com.google.maps.model.LatLng(latLng.latitude, latLng.longitude);
     }
 }
 

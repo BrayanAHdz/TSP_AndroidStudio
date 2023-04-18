@@ -1,9 +1,12 @@
 package com.example.tsp;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class Lugar {
     private String name;
     private double latitude;
     private double longitude;
+    private LatLng latLng;
 
     public Lugar() {
     }
@@ -36,5 +39,13 @@ public class Lugar {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public LatLng getLatLng() {
+        return latLng;
+    }
+
+    public void setLatLng(LatLng latLng) {
+        this.latLng = latLng;
     }
 }

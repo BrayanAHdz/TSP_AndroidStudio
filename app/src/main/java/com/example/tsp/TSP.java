@@ -2,6 +2,8 @@ package com.example.tsp;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class TSP {
     private static final float pC = 0.80f;
     private static final float pM = 0.01f;
 
-    public String[] getTSP(Lugar origen, @NonNull List<Lugar> _lugares){
+    public LatLng[] getTSP(Lugar origen, @NonNull List<Lugar> _lugares){
         lugares.clear();
         lugares.add(origen);
 
@@ -29,10 +31,10 @@ public class TSP {
 
         iniciarPoblacion();
         int mejorRuta[] = ciclo();
-        String resultado[] = new String[numLugares];
+        LatLng resultado[] = new LatLng[numLugares];
 
         for (int i = 0; i < numLugares; i++) {
-            resultado[i] = lugares.get(mejorRuta[i]).getName();
+            resultado[i] = new LatLng(lugares.get(mejorRuta[i]).getLatitude(),lugares.get(mejorRuta[i]).getLongitude());
         }
 
         return resultado;
