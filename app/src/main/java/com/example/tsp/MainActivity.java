@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -55,13 +56,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int AUTOCOMPLETE_REQUEST_CODE_ORIGIN = 1;
     private static final int AUTOCOMPLETE_REQUEST_CODE = 2;
     private boolean setOrigin = false;
-    EditText txtOrigen, txtLugar;
-    GoogleMap mMap;
+    private EditText txtOrigen, txtLugar;
+    private TextView tvDistancia, tvTiempo;
+    private GoogleMap mMap;
 
     private Lugar origen, lugar;
 
     private HashMap<String, Marker> mMarkerMap = new HashMap<>();
     private List<Lugar> lstLugares = new ArrayList<>();
+
+    private long disntacia = 0, tiempo = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         lugar = new Lugar();
 
         txtOrigen = findViewById(R.id.etBuscar);
+        tvDistancia = findViewById(R.id.tvDistancia);
+        tvTiempo = findViewById(R.id.tvTiempo);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -82,25 +88,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
-
-        /*Lugar origin = new Lugar("Lugar1",2d,2d);
-        lstLugares.add(new Lugar("Lugar2",2d,5d));
-        lstLugares.add(new Lugar("Lugar3",2d,8d));
-        lstLugares.add(new Lugar("Lugar4",5d,8d));
-        lstLugares.add(new Lugar("Lugar5",9d,8d));
-        lstLugares.add(new Lugar("Lugar6",10d,6d));
-        lstLugares.add(new Lugar("Lugar7",10d,3d));
-        lstLugares.add(new Lugar("Lugar8",2d,8d));
-        lstLugares.add(new Lugar("Lugar9",2d,6d));
-        lstLugares.add(new Lugar("Lugar10",2d,4d));
-
-        TSP tsp = new TSP();
-        LatLng ruta[] = tsp.getTSP(origin, lstLugares);
-
-        System.out.println("////////////////////////////");
-        for (int i = 0; i < ruta.length; i++){
-            System.out.println(ruta[i]);
-        }*/
     }
 
     public void showBottomDialog(View view) {
@@ -220,9 +207,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 lugar.setLongitude(place.getLatLng().longitude);
                 lugar.setLatLng(place.getLatLng());
             }
-            /*GetDirectionsTask getDirectionsTask = new GetDirectionsTask(mexico, place.getLatLng(), mMap);
-            getDirectionsTask.execute();*/
-
         }
         else if (resultCode == AutocompleteActivity.RESULT_ERROR) {}
         else if (resultCode == RESULT_CANCELED) {}
@@ -282,7 +266,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(origen.getName() == null || lstLugares.size() == 0) return;
 
         mMap.clear();
-
+        disntacia = 0;
+        tiempo = 0;
 
         BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
         mMap.addMarker(new MarkerOptions()
@@ -300,21 +285,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         if(lstLugares.size() == 1){
-            GetDirectionsTask getDirectionsTask = new GetDirectionsTask( origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap);
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask( origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), origen.getLatLng(), mMap);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), origen.getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
         }
         else if(lstLugares.size() == 2){
-            GetDirectionsTask getDirectionsTask = new GetDirectionsTask(origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap);
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask(origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), origen.getLatLng(), mMap);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), origen.getLatLng(), mMap, this);
             getDirectionsTask.execute();
         }
         else{
@@ -324,12 +309,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             GetDirectionsTask getDirectionsTask;
             for (int i = 0; i < ruta.length - 1; i++){
-                getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap);
+                getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap, this);
                 getDirectionsTask.execute();
             }
-            getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap);
+            getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap, this);
             getDirectionsTask.execute();
         }
+    }
+
+    public void showDistanceAndTime(long distance, long time){
+        disntacia += distance;
+        tiempo += time;
+
+        tvDistancia.setText(disntacia/1000 + "Km");
+        tvTiempo.setText(tiempo / 60 + "min");
     }
 }
 
@@ -337,12 +330,14 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
 
     private LatLng origin;
     private LatLng destination;
+    private MainActivity mainActivity;
     GoogleMap mMap;
 
-    public GetDirectionsTask(LatLng origin, LatLng destination, GoogleMap mMap) {
+    public GetDirectionsTask(LatLng origin, LatLng destination, GoogleMap mMap, MainActivity mainActivity) {
         this.origin = origin;
         this.destination = destination;
         this.mMap = mMap;
+        this.mainActivity = mainActivity;
     }
 
     @Override
@@ -372,9 +367,10 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
                 }
             }
             mMap.addPolyline(polylineOptions);
-            System.out.println("///////////////////////////");
-            System.out.println(result.routes[0].legs[0].distance.inMeters);
-            System.out.println(result.routes[0].legs[0].duration.inSeconds);
+
+            long distance = result.routes[0].legs[0].distance.inMeters;
+            long time = result.routes[0].legs[0].duration.inSeconds;
+            mainActivity.showDistanceAndTime(distance,time);
         }
     }
 
