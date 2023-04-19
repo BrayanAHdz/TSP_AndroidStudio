@@ -347,8 +347,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         disntacia += distance;
         tiempo += time;
 
-        tvDistancia.setText(disntacia/1000 + "Km");
-        tvTiempo.setText(tiempo / 60 + "min");
+        tvDistancia.setText(disntacia/1000 + " km");
+        tvTiempo.setText(tiempo / 60 + " min");
     }
 }
 
