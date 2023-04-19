@@ -35,7 +35,8 @@
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:cardCornerRadius="7dp">
+            app:cardCornerRadius="7dp"
+            android:elevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -52,12 +53,13 @@
                     android:background="@null"
                     android:ems="10"
                     android:focusableInTouchMode="false"
-                    android:hint="Buscar lugar"
+                    android:hint="Agregar un lugar"
                     android:inputType="text"
                     android:onClick="startAutocompleteOrigin"
-                    android:paddingHorizontal="10dp"
+                    android:paddingHorizontal="15dp"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small" />
             </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>
@@ -73,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:drawablePadding="8dp"
-            android:text="1000 km"
+            android:text="0 km"
             app:drawableStartCompat="@drawable/outline_directions_car_18"
             app:drawableTint="?android:attr/textColorHint" />
 
@@ -83,7 +85,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:drawablePadding="8dp"
-            android:text="60 min"
+            android:text="0 min"
             app:drawableStartCompat="@drawable/outline_access_time_18"
             app:drawableTint="?android:attr/textColorHint" />
 

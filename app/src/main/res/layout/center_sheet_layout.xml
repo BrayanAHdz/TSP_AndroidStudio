@@ -9,8 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="30dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/createText"
@@ -27,9 +26,9 @@
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginVertical="20dp"
             app:cardCornerRadius="7dp"
-            app:cardElevation="1dp"
-            android:layout_marginVertical="20dp">
+            app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -40,7 +39,7 @@
                 <EditText
                     android:id="@+id/etLugar"
                     style="@style/Widget.AppCompat.EditText"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1"
                     android:background="@null"
