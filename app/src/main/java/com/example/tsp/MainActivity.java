@@ -332,14 +332,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void paintRuta(LatLng[] ruta){
+    public void paintRuta(List<Lugar> ruta){
         card.cancel();
+        lstLugares.clear();
+        for (int i = 0; i < ruta.size(); i++)
+            lstLugares.add(ruta.get(i));
+
         GetDirectionsTask getDirectionsTask;
-        for (int i = 0; i < ruta.length - 1; i++){
-            getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap, this);
+        for (int i = 0; i < ruta.size() - 1; i++){
+            getDirectionsTask = new GetDirectionsTask(ruta.get(i).getLatLng(), ruta.get(i+1).getLatLng(), mMap, this);
             getDirectionsTask.execute();
         }
-        getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap, this);
+        getDirectionsTask = new GetDirectionsTask(ruta.get(ruta.size()-1).getLatLng(), ruta.get(0).getLatLng(), mMap, this);
         getDirectionsTask.execute();
     }
 
@@ -407,7 +411,7 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
 
 
 
-class GetRuteTask extends AsyncTask<Void, Void, LatLng[]> {
+class GetRuteTask extends AsyncTask<Void, Void, List<Lugar>> {
     private List<Lugar> lstLugares;
     private MainActivity mainActivity;
 
@@ -416,13 +420,13 @@ class GetRuteTask extends AsyncTask<Void, Void, LatLng[]> {
         this.mainActivity = mainActivity;
     }
     @Override
-    protected LatLng[] doInBackground(Void... voids) {
+    protected List<Lugar> doInBackground(Void... voids) {
         TSP tsp = new TSP();
         return tsp.getTSP(lstLugares);
     }
 
     @Override
-    protected void onPostExecute(LatLng[] ruta) {
+    protected void onPostExecute(List<Lugar> ruta) {
         super.onPostExecute(ruta);
         mainActivity.paintRuta(ruta);
     }

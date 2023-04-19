@@ -17,7 +17,7 @@ public class TSP {
     private static final float pC = 0.80f;
     private static final float pM = 0.01f;
 
-    public LatLng[] getTSP(@NonNull List<Lugar> _lugares){
+    public List<Lugar> getTSP(@NonNull List<Lugar> _lugares){
         lugares.clear();
 
         lugares = _lugares;
@@ -28,10 +28,10 @@ public class TSP {
 
         iniciarPoblacion();
         int mejorRuta[] = ciclo();
-        LatLng resultado[] = new LatLng[numLugares];
+        List<Lugar> resultado = new ArrayList<>();
 
         for (int i = 0; i < numLugares; i++) {
-            resultado[i] = new LatLng(lugares.get(mejorRuta[i]).getLatitude(),lugares.get(mejorRuta[i]).getLongitude());
+            resultado.add(lugares.get(mejorRuta[i]));
         }
 
         return resultado;
