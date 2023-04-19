@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -18,8 +19,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,36 +57,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int AUTOCOMPLETE_REQUEST_CODE_ORIGIN = 1;
-    private static final int AUTOCOMPLETE_REQUEST_CODE = 2;
-    private boolean setOrigin = false;
-    private EditText txtOrigen, txtLugar;
     private TextView tvDistancia, tvTiempo;
     private GoogleMap mMap;
 
-    private Lugar origen, lugar;
-
-    private HashMap<String, Marker> mMarkerMap = new HashMap<>();
-    private List<Lugar> lstLugares = new ArrayList<>();
+    private final HashMap<String, Marker> mMarkerMap = new HashMap<>();
+    private final List<Lugar> lstLugares = new ArrayList<>();
 
     private long disntacia = 0, tiempo = 0;
+    private  AlertDialog card;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        origen = new Lugar();
-        lugar = new Lugar();
-
-        txtOrigen = findViewById(R.id.etBuscar);
         tvDistancia = findViewById(R.id.tvDistancia);
         tvTiempo = findViewById(R.id.tvTiempo);
 
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
         Places.initialize(getApplicationContext(), getString(R.string.API_KEY));
@@ -91,43 +93,75 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void showBottomDialog(View view) {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.bottom_sheet_layout);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View mView = getLayoutInflater().inflate(R.layout.bottom_sheet_layout, null);
+
+        ListView listView = mView.findViewById(R.id.lvLugares);
+        List<String> dataList = new ArrayList<>();
+        for(int i = 0; i < lstLugares.size(); i++)
+            dataList.add(lstLugares.get(i).getName());
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, dataList);
+        listView.setAdapter(adapter);
+
+        builder.setView(mView);
+        AlertDialog dialog = builder.create();
 
         dialog.show();
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         dialog.getWindow().setGravity(Gravity.BOTTOM);
+
+        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
+            dialog.cancel();
+            showDeleteDialog(position);
+            return false;
+        });
     }
 
-    public void showCenterDialog(View view) {
+    private void showDeleteDialog(int position){
+        AlertDialog.Builder alerta = new AlertDialog.Builder(this);
+        alerta.setMessage("¿Desea eliminar la ubicación '"+lstLugares.get(position).getName()+"' de su lista de lugares?")
+                .setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        boolean origin = lstLugares.get(position).isOrigen();
+
+                        lstLugares.remove(position);
+                        if(origin && lstLugares.size() > 0)
+                            lstLugares.get(0).setOrigen(true);
+                        generateMarkers();
+                        generateRute();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog titulo = alerta.create();
+        titulo.setTitle("Eliminar ubicación");
+        titulo.show();
+    }
+
+    private void showCenterDialog() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         View mView = getLayoutInflater().inflate(R.layout.center_sheet_layout, null);
-        txtLugar = mView.findViewById(R.id.etLugar);
-        final Button btnAddLugar = mView.findViewById(R.id.btnAddLugar);
+
         dialog.setView(mView);
-        AlertDialog card = dialog.create();
+        card = dialog.create();
         card.show();
 
         card.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
         card.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        card.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         card.getWindow().setGravity(Gravity.CENTER);
 
-        btnAddLugar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(lugar.getName() != null){
-                    addMarker(lugar,2);
-                    card.cancel();
-                }
-                else{
-                    Toast.makeText(getApplicationContext(), "No se ha encontrado la ubicación.", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+        ImageView imgLoad = mView.findViewById(R.id.imgLoad);
+
+        Animation _animation = AnimationUtils.loadAnimation(this, R.anim.rotate_load);
+        imgLoad.setAnimation(_animation);
     }
 
     @Override
@@ -166,50 +200,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE_ORIGIN);
     }
-    public void startAutocomplete(View view){
-        List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
-
-        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                .build(this);
-
-        startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == AUTOCOMPLETE_REQUEST_CODE_ORIGIN) {
-            autocompleteRequest(requestCode,resultCode, data, txtOrigen);
-            return;
-        }
-        else if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
-            autocompleteRequest(requestCode,resultCode, data, txtLugar);
-            return;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+            if (resultCode == RESULT_OK) {
+                Place place = Autocomplete.getPlaceFromIntent(data);
 
-    private void autocompleteRequest(int requestCode,int resultCode, @Nullable Intent data, EditText txtPlace){
-        if (resultCode == RESULT_OK) {
-            Place place = Autocomplete.getPlaceFromIntent(data);
-            txtPlace.setText(place.getName());
-
-            if(requestCode == AUTOCOMPLETE_REQUEST_CODE_ORIGIN){
-                origen.setName(place.getName());
-                origen.setLatitude(place.getLatLng().latitude);
-                origen.setLongitude(place.getLatLng().longitude);
-                origen.setLatLng(place.getLatLng());
-                addMarker(origen, 1);
-            }
-            else{
-                lugar = new Lugar();
+                Lugar lugar = new Lugar();
                 lugar.setName(place.getName());
                 lugar.setLatitude(place.getLatLng().latitude);
                 lugar.setLongitude(place.getLatLng().longitude);
                 lugar.setLatLng(place.getLatLng());
+
+                if(lstLugares.size() == 0){
+                    lugar.setOrigen(true);
+                    addMarker(lugar, 1);
+                }
+                else{
+                    addMarker(lugar, 2);
+                }
             }
+            else if (resultCode == AutocompleteActivity.RESULT_ERROR) {}
+            else if (resultCode == RESULT_CANCELED) {}
+            return;
         }
-        else if (resultCode == AutocompleteActivity.RESULT_ERROR) {}
-        else if (resultCode == RESULT_CANCELED) {}
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void addMarker(Lugar ubicacion, int tipo){
@@ -230,21 +246,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(place));
 
-        if(tipo == 1){
-            if(setOrigin){
-                replaceMarker("origen");
-                mMarkerMap.replace("origen",marker);
-            }
-            else{
-                mMarkerMap.put("origen", marker);
-                setOrigin = true;
-            }
-        }
-        else{
+        if(tipo == 1)
+            mMarkerMap.put("origen", marker);
+        else
             mMarkerMap.put(name, marker);
-            lstLugares.add(ubicacion);
-        }
 
+        lstLugares.add(ubicacion);
         generateRute();
     }
 
@@ -262,59 +269,78 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             marker.remove();
     }
 
+    private void generateMarkers(){
+        mMap.clear();
+        BitmapDescriptor bitmapDescriptor;
+
+        for (int i = 0; i < lstLugares.size(); i++){
+            bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+
+            if(lstLugares.get(i).isOrigen())
+                bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+
+            mMap.addMarker(new MarkerOptions()
+                    .position(lstLugares.get(i).getLatLng())
+                    .title(lstLugares.get(i).getName())
+                    .icon(bitmapDescriptor));
+        }
+    }
+
     private void generateRute(){
-        if(origen.getName() == null || lstLugares.size() == 0) return;
+        if( lstLugares.size() < 2) return;
 
         mMap.clear();
         disntacia = 0;
         tiempo = 0;
 
-        BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-        mMap.addMarker(new MarkerOptions()
-                .position(origen.getLatLng())
-                .title(origen.getName())
-                .icon(bitmapDescriptor));
-
-        bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+        BitmapDescriptor bitmapDescriptor;
 
         for (int i = 0; i < lstLugares.size(); i++){
+            bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+
+            if(lstLugares.get(i).isOrigen())
+                bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+
             mMap.addMarker(new MarkerOptions()
                     .position(lstLugares.get(i).getLatLng())
                     .title(lstLugares.get(i).getName())
                     .icon(bitmapDescriptor));
         }
 
-        if(lstLugares.size() == 1){
-            GetDirectionsTask getDirectionsTask = new GetDirectionsTask( origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
+        if(lstLugares.size() == 2){
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), origen.getLatLng(), mMap, this);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
         }
-        else if(lstLugares.size() == 2){
-            GetDirectionsTask getDirectionsTask = new GetDirectionsTask(origen.getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
+        else if(lstLugares.size() == 3){
+            GetDirectionsTask getDirectionsTask = new GetDirectionsTask(lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(0).getLatLng(), lstLugares.get(1).getLatLng(), mMap, this);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), lstLugares.get(2).getLatLng(), mMap, this);
             getDirectionsTask.execute();
 
-            getDirectionsTask = new GetDirectionsTask( lstLugares.get(1).getLatLng(), origen.getLatLng(), mMap, this);
+            getDirectionsTask = new GetDirectionsTask( lstLugares.get(2).getLatLng(), lstLugares.get(0).getLatLng(), mMap, this);
             getDirectionsTask.execute();
         }
         else{
+            showCenterDialog();
+            GetRuteTask getRuteTask = new GetRuteTask(lstLugares, this);
+            getRuteTask.execute();
+        }
+    }
 
-            TSP tsp = new TSP();
-            LatLng ruta[] = tsp.getTSP(origen, lstLugares);
-
-            GetDirectionsTask getDirectionsTask;
-            for (int i = 0; i < ruta.length - 1; i++){
-                getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap, this);
-                getDirectionsTask.execute();
-            }
-            getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap, this);
+    public void paintRuta(LatLng[] ruta){
+        card.cancel();
+        GetDirectionsTask getDirectionsTask;
+        for (int i = 0; i < ruta.length - 1; i++){
+            getDirectionsTask = new GetDirectionsTask(ruta[i], ruta[i+1], mMap, this);
             getDirectionsTask.execute();
         }
+        getDirectionsTask = new GetDirectionsTask(ruta[ruta.length - 1], ruta[0], mMap, this);
+        getDirectionsTask.execute();
     }
 
     public void showDistanceAndTime(long distance, long time){
@@ -376,6 +402,29 @@ class GetDirectionsTask extends AsyncTask<Void, Void, DirectionsResult> {
 
     private com.google.maps.model.LatLng cLatLong(LatLng latLng){
         return new com.google.maps.model.LatLng(latLng.latitude, latLng.longitude);
+    }
+}
+
+
+
+class GetRuteTask extends AsyncTask<Void, Void, LatLng[]> {
+    private List<Lugar> lstLugares;
+    private MainActivity mainActivity;
+
+    public GetRuteTask(List<Lugar> lstLugares, MainActivity mainActivity) {
+        this.lstLugares = lstLugares;
+        this.mainActivity = mainActivity;
+    }
+    @Override
+    protected LatLng[] doInBackground(Void... voids) {
+        TSP tsp = new TSP();
+        return tsp.getTSP(lstLugares);
+    }
+
+    @Override
+    protected void onPostExecute(LatLng[] ruta) {
+        super.onPostExecute(ruta);
+        mainActivity.paintRuta(ruta);
     }
 }
 

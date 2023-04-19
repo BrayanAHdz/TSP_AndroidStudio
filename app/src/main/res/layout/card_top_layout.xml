@@ -13,7 +13,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fontFamily="@font/poppins"
-        android:text="Ubicación de origen"
+        android:text="Agregar ubicación"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textStyle="bold" />
 

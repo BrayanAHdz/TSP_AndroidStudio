@@ -7,6 +7,7 @@ public class Lugar {
     private double latitude;
     private double longitude;
     private LatLng latLng;
+    private boolean origen;
 
     public Lugar() {
     }
@@ -47,5 +48,13 @@ public class Lugar {
 
     public void setLatLng(LatLng latLng) {
         this.latLng = latLng;
+    }
+
+    public boolean isOrigen() {
+        return origen;
+    }
+
+    public void setOrigen(boolean origen) {
+        this.origen = origen;
     }
 }
